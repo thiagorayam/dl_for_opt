@@ -1,6 +1,8 @@
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
+import json
+from datetime import datetime
 
 from sklearn.utils.class_weight import compute_class_weight
 
@@ -9,13 +11,13 @@ import torch.nn as nn
 from torch.autograd import Variable
 
 from data.data_reader import TSPReader
-from utils.plot import plot_tsp, plot_predictions
+from utils.plot import plot_tsp, plot_predictions, plot_loss_curve
 from model.model import ResidualGatedGCNModel
 from utils.train import train_one_epoch, test, update_learning_rate
 
 # testing
 
-num_nodes = 10
+num_nodes = 20
 num_neighbors = -1  # when set to -1, it considers all the connections instead of k nearest neighbors
 base_dir = Path(__file__).parent.resolve().as_posix()
 train_filepath = f"{base_dir}/data/tsp/tsp{num_nodes}_train_concorde.txt"
@@ -30,15 +32,15 @@ a = f.add_subplot(111)
 plot_tsp(a, batch.nodes_coord[idx], batch.edges[idx], batch.edges_values[idx], batch.edges_target[idx])
 
 #
-num_nodes = 10 #@param # Could also be 10, 20, or 30!
+num_nodes = 20 #@param # Could also be 10, 20, or 30!
 num_neighbors = -1 # Could increase it!
 train_filepath = f"{base_dir}/data/tsp/tsp{num_nodes}_train_concorde.txt"
-hidden_dim = 50 #@param
-num_layers = 3 #@param
-mlp_layers = 2 #@param
-learning_rate = 0.01 #@param
-max_epochs = 40 #@param
-batches_per_epoch = 1000
+hidden_dim = 300 #@param
+num_layers = 30 #@param
+mlp_layers = 3 #@param
+learning_rate = 0.001 #@param
+max_epochs = 1500 #@param
+batches_per_epoch = 500
 
 variables = {'train_filepath': f'{base_dir}/data/tsp/tsp{num_nodes}_train_concorde.txt',
              'val_filepath': f'{base_dir}/data/tsp/tsp{num_nodes}_val_concorde.txt',
@@ -185,5 +187,21 @@ with torch.no_grad():
 
 
 y_preds = torch.squeeze(torch.stack(y_preds))
-# Plot prediction visualizations
-plot_predictions(x_nodes_coord, x_edges, x_edges_values, y_edges, y_preds, num_plots=num_samples)
+
+# # Plot prediction visualizations
+# plot_predictions(x_nodes_coord, x_edges, x_edges_values, y_edges, y_preds, num_plots=num_samples)
+
+output_dict = {'train_losses': train_losses, 'val_losses': val_losses, 'test_losses': test_losses}
+
+# Save output_dict
+output_dict_path = f"{base_dir}/output/output_dict_{datetime.now().strftime("%Y%m%d%H%M")}.json"
+
+# Saving as json
+with open(output_dict_path, 'w') as f:
+    json.dump(output_dict, f, indent=4)
+
+# save model
+model_path = f"{base_dir}/output/model_{datetime.now().strftime("%Y%m%d%H%M")}.pkl"
+torch.save(net.state_dict(), model_path)
+
+# plot_loss_curve(output_dict['train_losses'], output_dict['val_losses'], output_dict['test_losses'], variables)
