@@ -235,13 +235,7 @@ class ResidualGatedGCNModel(nn.Module):
         y = y.permute(0, 3, 1, 2)  # B x voc_edges x V x V
 
         loss_edges = nn.NLLLoss(edge_cw)
-        loss_ = loss_edges(y.contiguous(), y_edges)
-
-        y_first_element = y[:, 0, :, :]
-        similarity_loss = nn.CosineEmbeddingLoss()
-        cos_sim_loss = similarity_loss(y_edges.view(-1), y_first_element.view(-1), torch.tensor(1))
-
-        loss = 2*cos_sim_loss + loss_
+        loss = loss_edges(y.contiguous(), y_edges)
 
         return loss
 

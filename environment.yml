@@ -128,4 +128,3 @@ dependencies:
       - traitlets==5.14.3
       - wcwidth==0.2.13
       - yarl==1.9.4
-prefix: /data/home/thrsantos/.miniconda3/envs/dl_for_opt
